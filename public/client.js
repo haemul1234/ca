@@ -1,8 +1,6 @@
 let nickname = localStorage.getItem('nickname') || '';
 
-let socket = null;
 
-let currentRoom = null;
 
 // ── 닉네임 설정 ──────────────────────────────
 function setNickname() {
@@ -15,15 +13,8 @@ function setNickname() {
 
   localStorage.setItem('nickname', nickname);
 
- if (!socket) {
-  connectSocket();
-}
-
-socket.emit('set_nickname', nickname);
 
   input.disabled = true;
-
-  setStatus(`🟢 ${nickname}님 환영합니다`);
 
   document.getElementById('nickname-box').style.display =
   'none';
@@ -36,97 +27,6 @@ socket.emit('set_nickname', nickname);
 
 }
 
-// ── 소켓 이벤트 등록 ─────────────────────────
-function setupSocketEvents() {
-
-  socket.on('waiting', (msg) => {
-
-    setStatus('⏳ ' + msg);
-
-  });
-
-  socket.on('matched', ({ room }) => {
-
-    currentRoom = room;
-
-    setStatus('🟢 연결됨! 채팅을 시작하세요');
-
-    setInputEnabled(true);
-
-    addMessage('상대방과 연결되었습니다.', 'system');
-
-  });
-
-  socket.on('message', ({ text, nickname, time }) => {
-
-    addMessage(`${nickname}: ${text}`, 'received', time);
-
-  });
-
-  socket.on('partner_left', (msg) => {
-
-    setStatus('🔴 ' + msg);
-
-    setInputEnabled(false);
-
-    addMessage(msg, 'system');
-
-    currentRoom = null;
-
-  });
-
-  socket.on('user_list', (users) => {
-
-    const userList = document.getElementById('user-list');
-
-    userList.innerHTML = '';
-
-    Object.values(users).forEach((name) => {
-
-      const div = document.createElement('div');
-
-      div.className = 'user-item';
-
-      div.textContent = '🟢 ' + name;
-
-      userList.appendChild(div);
-
-    });
-
-  });
-
-}
-
-// ── 로그인 후 호출 ───────────────────────────
-function connectSocket() {
-
-  socket = io();
-
-  setupSocketEvents();
-
-  if (nickname) {
-
-    socket.emit('set_nickname', nickname);
-
-    document.getElementById('nickname').value = nickname;
-
-    document.getElementById('nickname').disabled = true;
-
-    setStatus(`🟢 ${nickname}님 환영합니다`);
-
-    document.getElementById('nickname-box').style.display =
-    'none';
-
-    document.getElementById('messages').style.display =
-    'flex';
-
-    document.querySelector('.input-area').style.display =
-    'flex';
-
-  }
-
-}
-
 // ── 메시지 전송 ──────────────────────────────
 function sendMessage() {
 
@@ -134,17 +34,20 @@ function sendMessage() {
 
   const text = input.value.trim();
 
-  if (!text || !currentRoom) return;
+  if (!text) return;
 
-  saveMessage(text, nickname);
+  console.log(localStorage.getItem('currentRoom'));
 
-  socket.emit('message', {
-    room: currentRoom,
+  const roomId =
+    localStorage.getItem('currentRoom');
+
+  saveRoomMessage(
+    roomId,
     text,
     nickname
-  });
+  );
 
-  addMessage(text, 'sent', new Date().toLocaleTimeString('ko-KR'));
+  addMessage(`${nickname}: ${text}`, 'sent', new Date().toLocaleTimeString('ko-KR'));
 
   input.value = '';
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>1대1 채팅</title>
+  <title>delete</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -31,8 +31,6 @@
 
 </div>
 
-  </div>
-
   <!-- 앱 -->
   <div class="app-container" id="app" style="display:none;">
 
@@ -50,7 +48,7 @@
 
       <div class="header">
 
-        <h2>💬 1대1 채팅</h2>
+        <h2>delete</h2>
 
         <div id="status" class="status">
           로그인 필요
@@ -64,23 +62,37 @@
       <!-- 닉네임 -->
       <div id="nickname-box" style="display:none;">
 
-        <input
-          type="text"
-          id="nickname"
-          placeholder="닉네임 입력"
-        >
+         <div class="nickname-card">
 
-        <button onclick="setNickname()">
-          입장
-        </button>
+    <img id="profile-image" class="nickname-profile">
 
-      </div>
+    <div class="nickname-input-box">
+
+      <input
+        type="text"
+        id="nickname"
+        placeholder="이름 입력"
+      >
+
+      <button onclick="setNickname()">
+        ✔
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
       <!-- 메시지 -->
-      <div id="messages" class="messages"></div>
+      <div
+      id="messages"
+      class="messages"
+      style="display:none;"
+      ></div>
 
       <!-- 입력 -->
-      <div class="input-area">
+      <div class="input-area" style="display:none;">
 
         <input
           type="text"
@@ -102,9 +114,8 @@
     </div>
 
   </div>
-</div>
 
-  <script src="/socket.io/socket.io.js"></script>
+
   <script src="client.js"></script>
   <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -116,13 +127,16 @@
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   
   import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  orderBy
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    orderBy,
+    doc,
+    setDoc,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDy203zE5wTzy_F8vShubi5cDqmn-dWMLY",
@@ -147,15 +161,26 @@
       const result = await signInWithPopup(auth, provider);
 
       const user = result.user;
-
+      
+      await setDoc(doc(db, "users", user.uid), {
+      
+      uid: user.uid,
+      name: user.displayName,
+      photo: user.photoURL,
+      email: user.email
+    });
       alert(user.displayName + " 로그인 성공");
 
       document.getElementById('login-screen').style.display = 'none';
-      connectSocket();
+      
 
       document.getElementById('app').style.display = 'flex';
 
       document.getElementById('nickname-box').style.display = 'flex';
+      
+      document.getElementById('profile-image').src =
+      user.photoURL;
+      
       
       const savedNickname = localStorage.getItem('nickname');
       
@@ -174,19 +199,159 @@
 
       console.log(user);
 
+      onSnapshot(collection(db, "users"), (snapshot) => {
+
+  const userList =
+    document.getElementById('user-list');
+
+  userList.innerHTML = '';
+
+  snapshot.forEach((docItem) => {
+
+    const data = docItem.data();
+
+    if (data.uid === user.uid) return;
+
+    const div = document.createElement('div');
+
+    div.onclick = async () => {
+
+      const roomId =
+        [user.uid, data.uid].sort().join('_');
+
+      localStorage.setItem('currentRoom', roomId);
+
+      console.log(roomId);
+
+      loadMessages(roomId);
+
+    };
+
+    div.className = 'user-item';
+
+    div.innerHTML = `
+      <img src="${data.photo}" class="user-photo">
+
+      <div class="user-info">
+
+        <div class="user-name">
+          ${data.name}
+        </div>
+
+        <div class="last-message">
+          채팅 시작하기
+        </div>
+
+      </div>
+    `;
+    const roomId =
+      [user.uid, data.uid].sort().join('_');
+
+    onSnapshot(
+
+      doc(db, "rooms", roomId),
+
+      (roomSnap) => {
+
+        if (!roomSnap.exists()) return;
+
+        const roomData = roomSnap.data();
+
+        div.querySelector('.last-message').textContent =
+          roomData.lastMessage || '채팅 시작하기';
+
+        userList.prepend(div);
+
+      }
+
+    );
+
+    userList.appendChild(div);
+
+  });
+
+});
+
     } catch (error) {
       console.error(error);
     }
   };
-  window.saveMessage = async function (text, sender) {
 
-  await addDoc(collection(db, "messages"), {
+  window.loadMessages = function (roomId) {
 
-    text,
-    sender,
-    time: Date.now()
+  const messages =
+    document.getElementById('messages');
 
-  });
+  messages.innerHTML = '';
+
+  onSnapshot(
+
+    query(
+      collection(db, "rooms", roomId, "messages"),
+      orderBy("time")
+    ),
+
+    (snapshot) => {
+
+      messages.innerHTML = '';
+
+      snapshot.forEach((docItem) => {
+
+        const data = docItem.data();
+
+        const messageTime =
+          new Date(data.time).toLocaleTimeString(
+            'ko-KR',
+            {
+              hour: '2-digit',
+              minute: '2-digit'
+            }
+          );
+
+        addMessage(
+          `${data.sender}: ${data.text}`,
+          data.sender === nickname
+            ? 'sent'
+            : 'received',
+          messageTime
+        );
+
+      });
+
+    }
+
+  );
+
+};
+window.saveRoomMessage = async function (
+  roomId,
+  text,
+  sender
+) {
+  await setDoc(
+
+  doc(db, "rooms", roomId),
+
+  {
+    lastMessage: text,
+    lastTime: Date.now()
+  },
+
+  { merge: true }
+
+);
+
+  await addDoc(
+
+    collection(db, "rooms", roomId, "messages"),
+
+    {
+      text,
+      sender,
+      time: Date.now()
+    }
+
+  );
 
 };
 </script>

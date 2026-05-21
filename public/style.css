@@ -335,3 +335,213 @@ body {
 
   cursor: pointer;
 }
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-photo {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.last-message {
+  color: #b9bbbe;
+  font-size: 12px;
+  margin-top: 3px;
+}
+.success-modal {
+
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.3);
+
+  display: none;
+
+  justify-content: center;
+  align-items: center;
+
+  z-index: 999;
+}
+
+.success-box {
+
+  width: 500px;
+
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 50px 40px;
+
+  text-align: center;
+}
+
+.check-icon {
+
+  width: 120px;
+  height: 120px;
+
+  border-radius: 50%;
+
+  border: 8px solid #dceccf;
+
+  color: #9fd37a;
+
+  font-size: 70px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin: 0 auto 30px;
+}
+
+.success-box h1 {
+
+  font-size: 48px;
+
+  color: #555;
+
+  margin-bottom: 20px;
+}
+
+.success-box p {
+
+  font-size: 28px;
+
+  color: #666;
+
+  margin-bottom: 40px;
+}
+
+.success-box button {
+
+  width: 140px;
+  height: 60px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background: #8ec5eb;
+
+  color: white;
+
+  font-size: 28px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+}
+.success-modal {
+
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.3);
+
+  display: none;
+
+  justify-content: center;
+  align-items: center;
+
+  z-index: 999;
+}
+
+.success-box {
+
+  width: 500px;
+
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 50px 40px;
+
+  text-align: center;
+}
+
+.check-icon {
+
+  width: 120px;
+  height: 120px;
+
+  border-radius: 50%;
+
+  border: 8px solid #dceccf;
+
+  color: #9fd37a;
+
+  font-size: 70px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin: 0 auto 30px;
+}
+
+.success-box h1 {
+
+  font-size: 48px;
+
+  color: #555;
+
+  margin-bottom: 20px;
+}
+
+.success-box p {
+
+  font-size: 28px;
+
+  color: #666;
+
+  margin-bottom: 40px;
+}
+
+.success-box button {
+
+  width: 140px;
+  height: 60px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background: #8ec5eb;
+
+  color: white;
+
+  font-size: 28px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+}
