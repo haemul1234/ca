@@ -12,6 +12,9 @@ app.use(express.static('public'));
 let waitingUser = null;
 
 io.on('connection', (socket) => {
+  socket.on('message', (data) => {
+  io.to(data.room).emit('message', data);
+});
   console.log('🟢 접속:', socket.id);
   
   socket.on('set_nickname', (name) => {

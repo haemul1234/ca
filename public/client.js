@@ -1,3 +1,5 @@
+const socket = io();
+
 let nickname = localStorage.getItem('nickname') || '';
 
 
@@ -46,6 +48,12 @@ function sendMessage() {
     text,
     nickname
   );
+
+  socket.emit('message', {
+    room: roomId,
+    text,
+    nickname
+  });
 
   addMessage(`${nickname}: ${text}`, 'sent', new Date().toLocaleTimeString('ko-KR'));
 
@@ -101,3 +109,12 @@ function setInputEnabled(enabled) {
   document.getElementById('send-btn').disabled = !enabled;
 
 }
+socket.on('message', (data) => {
+
+  addMessage(
+    `${data.nickname}: ${data.text}`,
+    'received',
+    new Date().toLocaleTimeString('ko-KR')
+  );
+
+});
