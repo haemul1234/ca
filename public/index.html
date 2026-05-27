@@ -9,8 +9,8 @@
 
 <body>
 
-  <!-- 로그인 버튼 -->
-  <div id="login-screen">
+<!-- 로그인 화면 -->
+<div id="login-screen">
 
   <div class="login-card">
 
@@ -31,51 +31,82 @@
 
 </div>
 
-  <!-- 앱 -->
-  <div class="app-container" id="app" style="display:none;">
+<!-- 앱 -->
+<div class="app-container" id="app" style="display:none;">
 
-    <!-- 왼쪽 -->
-    <div class="sidebar">
+  <!-- 왼쪽 -->
+  <div class="sidebar">
 
-      <h3>접속 중</h3>
+    <h3>접속 중</h3>
 
-      <div id="user-list"></div>
+    <div id="user-list"></div>
+
+  </div>
+
+  <!-- 오른쪽 -->
+  <div class="chat-container">
+
+    <div class="header">
+
+      <h2>delete</h2>
+
+      <div id="status" class="status">
+        로그인 필요
+      </div>
 
     </div>
 
-    <!-- 오른쪽 -->
-    <div class="chat-container">
+    <!-- 프로필 -->
+    <div id="profile" class="profile"></div>
 
-      <div class="header">
+    <!-- 닉네임 -->
+    <div id="nickname-box" style="display:none;">
 
-        <h2>delete</h2>
+      <div class="nickname-card">
 
-        <div id="status" class="status">
-          로그인 필요
+        <img id="profile-image" class="nickname-profile">
+
+        <div class="nickname-input-box">
+
+          <input
+            type="text"
+            id="nickname"
+            placeholder="이름 입력"
+          >
+
+          <button onclick="setNickname()">
+            ✔
+          </button>
+
         </div>
 
       </div>
 
-      <!-- 프로필 -->
-      <div id="profile" class="profile"></div>
+    </div>
 
-      <!-- 닉네임 -->
-      <div id="nickname-box" style="display:none;">
+    <!-- 메시지 -->
+    <div
+      id="messages"
+      class="messages"
+      style="display:none;"
+    ></div>
 
-         <div class="nickname-card">
-
-    <img id="profile-image" class="nickname-profile">
-
-    <div class="nickname-input-box">
+    <!-- 입력 -->
+    <div class="input-area" style="display:none;">
 
       <input
         type="text"
-        id="nickname"
-        placeholder="이름 입력"
+        id="input"
+        placeholder="메시지를 입력하세요..."
+        disabled
       >
 
-      <button onclick="setNickname()">
-        ✔
+      <button
+        id="send-btn"
+        onclick="sendMessage()"
+        disabled
+      >
+        전송
       </button>
 
     </div>
@@ -84,115 +115,89 @@
 
 </div>
 
-      <!-- 메시지 -->
-      <div
-      id="messages"
-      class="messages"
-      style="display:none;"
-      ></div>
+<!-- socket -->
+<script src="/socket.io/socket.io.js"></script>
 
-      <!-- 입력 -->
-      <div class="input-area" style="display:none;">
+<!-- firebase + chat -->
+<script type="module">
 
-        <input
-          type="text"
-          id="input"
-          placeholder="메시지를 입력하세요..."
-          disabled
-        >
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-        <button
-          id="send-btn"
-          onclick="sendMessage()"
-          disabled
-        >
-          전송
-        </button>
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-      </div>
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  orderBy,
+  doc,
+  setDoc,
+  onSnapshot
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    </div>
+/* Firebase 설정 */
+const firebaseConfig = {
 
-  </div>
+  apiKey: "네 apiKey",
+  authDomain: "네 authDomain",
+  projectId: "네 projectId",
+  storageBucket: "네 storageBucket",
+  messagingSenderId: "네 senderId",
+  appId: "네 appId"
 
+};
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+const app = initializeApp(firebaseConfig);
 
-  import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  
-  import {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    query,
-    orderBy,
-    doc,
-    setDoc,
-    onSnapshot
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const db = getFirestore(app);
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDiTI0TOuqJLbN_4KenjGqVjgaSFOlp750",
-    authDomain: "chatapp-c696b.firebaseapp.com",
-    projectId: "chatapp-c696b",
-    storageBucket: "chatapp-c696b.firebasestorage.app",
-    messagingSenderId: "972009621827",
-    appId: "1:972009621827:web:766ec3c85a72c785ca47f6",
-    measurementId: "G-CQ35HMT987"
-  };
+const auth = getAuth(app);
 
-  const app = initializeApp(firebaseConfig);
+const provider = new GoogleAuthProvider();
 
-  const db = getFirestore(app);
+const socket = io();
 
-  const auth = getAuth(app);
+let nickname =
+  localStorage.getItem('nickname') || '';
 
-  const provider = new GoogleAuthProvider();
+/* 로그인 */
+window.login = async function () {
 
-  window.login = async function () {
-    try {
-      const result = await signInWithPopup(auth, provider);
+  try {
 
-      const user = result.user;
-      //document.getElementById('success-modal').style.display =
-      //'flex';
+    const result =
+      await signInWithPopup(auth, provider);
 
-      //document.getElementById('success-text').textContent =
-      //`${user.displayName}님 로그인되었습니다.`;
-      
-      await setDoc(doc(db, "users", user.uid), {
-      
+    const user = result.user;
+
+    await setDoc(doc(db, "users", user.uid), {
+
       uid: user.uid,
       name: user.displayName,
       photo: user.photoURL,
       email: user.email
+
     });
-      
 
-      document.getElementById('login-screen').style.display = 'none';
-      
+    document.getElementById('login-screen').style.display =
+      'none';
 
-      document.getElementById('app').style.display = 'flex';
+    document.getElementById('app').style.display =
+      'flex';
 
-      document.getElementById('nickname-box').style.display = 'flex';
-      
-      document.getElementById('profile-image').src =
+    document.getElementById('nickname-box').style.display =
+      'flex';
+
+    document.getElementById('profile-image').src =
       user.photoURL;
-      
-      
-      const savedNickname = localStorage.getItem('nickname');
-      
-      if (savedNickname) {
-        document.getElementById('nickname').value =
-        savedNickname;
-      }
 
     document.getElementById('profile').innerHTML = `
       <img src="${user.photoURL}">
@@ -202,92 +207,117 @@
       </div>
     `;
 
-      console.log(user);
+    const savedNickname =
+      localStorage.getItem('nickname');
 
-      onSnapshot(collection(db, "users"), (snapshot) => {
+    if (savedNickname) {
 
-  const userList =
-    document.getElementById('user-list');
+      document.getElementById('nickname').value =
+        savedNickname;
 
-  userList.innerHTML = '';
-
-  snapshot.forEach((docItem) => {
-
-    const data = docItem.data();
-
-    if (data.uid === user.uid) return;
-
-    const div = document.createElement('div');
-
-    div.onclick = async () => {
-
-      const roomId =
-        [user.uid, data.uid].sort().join('_');
-
-      localStorage.setItem('currentRoom', roomId);
-
-      console.log(roomId);
-
-      loadMessages(roomId);
-
-    };
-
-    div.className = 'user-item';
-
-    div.innerHTML = `
-      <img src="${data.photo}" class="user-photo">
-
-      <div class="user-info">
-
-        <div class="user-name">
-          ${data.name}
-        </div>
-
-        <div class="last-message">
-          채팅 시작하기
-        </div>
-
-      </div>
-    `;
-    const roomId =
-      [user.uid, data.uid].sort().join('_');
-
-    onSnapshot(
-
-      doc(db, "rooms", roomId),
-
-      (roomSnap) => {
-
-        if (!roomSnap.exists()) return;
-
-        const roomData = roomSnap.data();
-
-        div.querySelector('.last-message').textContent =
-          roomData.lastMessage || '채팅 시작하기';
-
-        userList.prepend(div);
-
-      }
-
-    );
-
-    userList.appendChild(div);
-
-  });
-
-});
-
-    } catch (error) {
-      console.error(error);
     }
-  };
 
-  window.loadMessages = function (roomId) {
+    /* 유저 목록 */
+    onSnapshot(collection(db, "users"), (snapshot) => {
+
+      const userList =
+        document.getElementById('user-list');
+
+      userList.innerHTML = '';
+
+      snapshot.forEach((docItem) => {
+
+        const data = docItem.data();
+
+        if (data.uid === user.uid) return;
+
+        const div = document.createElement('div');
+
+        div.className = 'user-item';
+
+        div.innerHTML = `
+          <img src="${data.photo}" class="user-photo">
+
+          <div class="user-info">
+
+            <div class="user-name">
+              ${data.name}
+            </div>
+
+            <div class="last-message">
+              채팅 시작하기
+            </div>
+
+          </div>
+        `;
+
+        div.onclick = () => {
+
+          const roomId =
+            [user.uid, data.uid]
+            .sort()
+            .join('_');
+
+          localStorage.setItem(
+            'currentRoom',
+            roomId
+          );
+
+          loadMessages(roomId);
+
+        };
+
+        userList.appendChild(div);
+
+      });
+
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+};
+
+/* 닉네임 */
+window.setNickname = function () {
+
+  const input =
+    document.getElementById('nickname');
+
+  nickname = input.value.trim();
+
+  if (!nickname) return;
+
+  localStorage.setItem(
+    'nickname',
+    nickname
+  );
+
+  document.getElementById('nickname-box').style.display =
+    'none';
+
+  document.getElementById('messages').style.display =
+    'flex';
+
+  document.querySelector('.input-area').style.display =
+    'flex';
+
+  document.getElementById('input').disabled =
+    false;
+
+  document.getElementById('send-btn').disabled =
+    false;
+
+};
+
+/* 메시지 로드 */
+window.loadMessages = function (roomId) {
 
   const messages =
     document.getElementById('messages');
-
-  messages.innerHTML = '';
 
   onSnapshot(
 
@@ -304,21 +334,13 @@
 
         const data = docItem.data();
 
-        const messageTime =
-          new Date(data.time).toLocaleTimeString(
-            'ko-KR',
-            {
-              hour: '2-digit',
-              minute: '2-digit'
-            }
-          );
-
         addMessage(
           `${data.sender}: ${data.text}`,
           data.sender === nickname
             ? 'sent'
             : 'received',
-          messageTime
+          new Date(data.time)
+            .toLocaleTimeString('ko-KR')
         );
 
       });
@@ -328,27 +350,35 @@
   );
 
 };
-window.saveRoomMessage = async function (
+
+/* 메시지 저장 */
+async function saveRoomMessage(
   roomId,
   text,
   sender
 ) {
+
   await setDoc(
 
-  doc(db, "rooms", roomId),
+    doc(db, "rooms", roomId),
 
-  {
-    lastMessage: text,
-    lastTime: Date.now()
-  },
+    {
+      lastMessage: text,
+      lastTime: Date.now()
+    },
 
-  { merge: true }
+    { merge: true }
 
-);
+  );
 
   await addDoc(
 
-    collection(db, "rooms", roomId, "messages"),
+    collection(
+      db,
+      "rooms",
+      roomId,
+      "messages"
+    ),
 
     {
       text,
@@ -358,151 +388,96 @@ window.saveRoomMessage = async function (
 
   );
 
-};
-window.closeSuccessModal = function () {
-
-  document.getElementById('success-modal').style.display =
-  'none';
-
-};
-const socket = io();
-
-let nickname = localStorage.getItem('nickname') || '';
-
-
-
-// ── 닉네임 설정 ──────────────────────────────
-window.setNickname = function() {
-
-  const input = document.getElementById('nickname');
-
-  nickname = input.value.trim();
-
-  if (!nickname) return;
-
-  localStorage.setItem('nickname', nickname);
-
-
-  input.disabled = true;
-
-  document.getElementById('nickname-box').style.display =
-  'none';
-  
-  document.getElementById('messages').style.display =
-  'flex';
-  
-  document.querySelector('.input-area').style.display =
-  'flex';
-
 }
 
-// ── 메시지 전송 ──────────────────────────────
-window.sendMessage = function() {
+/* 메시지 전송 */
+window.sendMessage = async function () {
 
-  const input = document.getElementById('input');
+  const input =
+    document.getElementById('input');
 
   const text = input.value.trim();
 
   if (!text) return;
 
-  console.log(localStorage.getItem('currentRoom'));
-
   const roomId =
     localStorage.getItem('currentRoom');
 
-  saveRoomMessage(
+  await saveRoomMessage(
     roomId,
     text,
     nickname
   );
 
   socket.emit('message', {
+
     room: roomId,
     text,
     nickname
-  });
 
-  addMessage(`${nickname}: ${text}`, 'sent', new Date().toLocaleTimeString('ko-KR'));
+  });
 
   input.value = '';
 
-  input.focus();
+};
 
-}
+/* 메시지 받기 */
+socket.on('message', (data) => {
 
-// Enter 키 전송
-document.getElementById('input').addEventListener('keydown', (e) => {
+  addMessage(
 
-  if (e.key === 'Enter') {
+    `${data.nickname}: ${data.text}`,
 
-    sendMessage();
+    'received',
 
-  }
+    new Date().toLocaleTimeString('ko-KR')
+
+  );
 
 });
 
-// ── 메시지 출력 ──────────────────────────────
-window.addMessage = function(text, type, time) {
+/* 메시지 출력 */
+window.addMessage = function (
+  text,
+  type,
+  time
+) {
 
-  const messages = document.getElementById('messages');
+  const messages =
+    document.getElementById('messages');
 
-  const div = document.createElement('div');
+  const div =
+    document.createElement('div');
 
-  div.className = `message ${type}`;
+  div.className =
+    `message ${type}`;
 
   div.innerHTML = `
     ${text}
-    ${time ? `<small>${time}</small>` : ''}
+    <small>${time}</small>
   `;
 
   messages.appendChild(div);
 
-  messages.scrollTop = messages.scrollHeight;
+  messages.scrollTop =
+    messages.scrollHeight;
 
-}
+};
 
-// ── 상태 변경 ────────────────────────────────
-window.setStatus = function(msg) {
+/* 엔터 */
+document
+  .getElementById('input')
+  .addEventListener('keydown', (e) => {
 
-  document.getElementById('status').textContent = msg;
+    if (e.key === 'Enter') {
 
-}
+      sendMessage();
 
-// ── 입력창 활성화 ────────────────────────────
-window.setInputEnabled = function(enabled) {
+    }
 
-  document.getElementById('input').disabled = !enabled;
+  });
 
-  document.getElementById('send-btn').disabled = !enabled;
-
-}
-socket.on('message', (data) => {
-
-  addMessage(
-    `${data.nickname}: ${data.text}`,
-    'received',
-    new Date().toLocaleTimeString('ko-KR')
-  );
-
-});
 </script>
-<div id="success-modal" class="success-modal">
-
-  <div class="success-box">
-
-    <div class="check-icon">✔</div>
-
-    <h1>로그인 성공!</h1>
-
-    <p id="success-text"></p>
-
-    <button onclick="closeSuccessModal()">
-      OK
-    </button>
-
-  </div>
-
-</div>
 
 </body>
 </html>
