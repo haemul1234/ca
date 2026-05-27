@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>delete</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- 로그인 버튼 -->
+  <div id="login-screen">
+
+  <div class="login-card">
+
+    <h1>로그인</h1>
+
+    <button onclick="login()" class="google-login-btn">
+
+      <img
+        src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
+        width="22"
+      >
+
+      Google로 로그인
+
+    </button>
+
+  </div>
+
+</div>
+
+  <!-- 앱 -->
+  <div class="app-container" id="app" style="display:none;">
+
+    <!-- 왼쪽 -->
+    <div class="sidebar">
+
+      <h3>접속 중</h3>
+
+      <div id="user-list"></div>
+
+    </div>
+
+    <!-- 오른쪽 -->
+    <div class="chat-container">
+
+      <div class="header">
+
+        <h2>delete</h2>
+
+        <div id="status" class="status">
+          로그인 필요
+        </div>
+
+      </div>
+
+      <!-- 프로필 -->
+      <div id="profile" class="profile"></div>
+
+      <!-- 닉네임 -->
+      <div id="nickname-box" style="display:none;">
+
+         <div class="nickname-card">
+
+    <img id="profile-image" class="nickname-profile">
+
+    <div class="nickname-input-box">
+
+      <input
+        type="text"
+        id="nickname"
+        placeholder="이름 입력"
+      >
+
+      <button onclick="setNickname()">
+        ✔
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+      <!-- 메시지 -->
+      <div
+      id="messages"
+      class="messages"
+      style="display:none;"
+      ></div>
+
+      <!-- 입력 -->
+      <div class="input-area" style="display:none;">
+
+        <input
+          type="text"
+          id="input"
+          placeholder="메시지를 입력하세요..."
+          disabled
+        >
+
+        <button
+          id="send-btn"
+          onclick="sendMessage()"
+          disabled
+        >
+          전송
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <script src="client.js"></script>
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+  import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    orderBy,
+    doc,
+    setDoc,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDy203zE5wTzy_F8vShubi5cDqmn-dWMLY",
+    authDomain: "delete-e7dab.firebaseapp.com",
+    projectId: "delete-e7dab",
+    storageBucket: "delete-e7dab.firebasestorage.app",
+    messagingSenderId: "814099915759",
+    appId: "1:814099915759:web:c0cfcd2d033c2aa2e64c1a",
+    measurementId: "G-QX4FYSE89W"
+  };
+
+  const app = initializeApp(firebaseConfig);
+
+  const db = getFirestore(app);
+
+  const auth = getAuth(app);
+
+  const provider = new GoogleAuthProvider();
+
+  window.login = async function () {
+    try {
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+      document.getElementById('success-modal').style.display =
+      'flex';
+
+      document.getElementById('success-text').textContent =
+      `${user.displayName}님 로그인되었습니다.`;
+      
+      await setDoc(doc(db, "users", user.uid), {
+      
+      uid: user.uid,
+      name: user.displayName,
+      photo: user.photoURL,
+      email: user.email
+    });
+      
+
+      document.getElementById('login-screen').style.display = 'none';
+      
+
+      document.getElementById('app').style.display = 'flex';
+
+      document.getElementById('nickname-box').style.display = 'flex';
+      
+      document.getElementById('profile-image').src =
+      user.photoURL;
+      
+      
+      const savedNickname = localStorage.getItem('nickname');
+      
+      if (savedNickname) {
+        document.getElementById('nickname').value =
+        savedNickname;
+      }
+
+    document.getElementById('profile').innerHTML = `
+      <img src="${user.photoURL}">
+      <div>
+        <div>${user.displayName}</div>
+        <small>${user.email}</small>
+      </div>
+    `;
+
+      console.log(user);
+
+      onSnapshot(collection(db, "users"), (snapshot) => {
+
+  const userList =
+    document.getElementById('user-list');
+
+  userList.innerHTML = '';
+
+  snapshot.forEach((docItem) => {
+
+    const data = docItem.data();
+
+    if (data.uid === user.uid) return;
+
+    const div = document.createElement('div');
+
+    div.onclick = async () => {
+
+      const roomId =
+        [user.uid, data.uid].sort().join('_');
+
+      localStorage.setItem('currentRoom', roomId);
+
+      console.log(roomId);
+
+      loadMessages(roomId);
+
+    };
+
+    div.className = 'user-item';
+
+    div.innerHTML = `
+      <img src="${data.photo}" class="user-photo">
+
+      <div class="user-info">
+
+        <div class="user-name">
+          ${data.name}
+        </div>
+
+        <div class="last-message">
+          채팅 시작하기
+        </div>
+
+      </div>
+    `;
+    const roomId =
+      [user.uid, data.uid].sort().join('_');
+
+    onSnapshot(
+
+      doc(db, "rooms", roomId),
+
+      (roomSnap) => {
+
+        if (!roomSnap.exists()) return;
+
+        const roomData = roomSnap.data();
+
+        div.querySelector('.last-message').textContent =
+          roomData.lastMessage || '채팅 시작하기';
+
+        userList.prepend(div);
+
+      }
+
+    );
+
+    userList.appendChild(div);
+
+  });
+
+});
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  window.loadMessages = function (roomId) {
+
+  const messages =
+    document.getElementById('messages');
+
+  messages.innerHTML = '';
+
+  onSnapshot(
+
+    query(
+      collection(db, "rooms", roomId, "messages"),
+      orderBy("time")
+    ),
+
+    (snapshot) => {
+
+      messages.innerHTML = '';
+
+      snapshot.forEach((docItem) => {
+
+        const data = docItem.data();
+
+        const messageTime =
+          new Date(data.time).toLocaleTimeString(
+            'ko-KR',
+            {
+              hour: '2-digit',
+              minute: '2-digit'
+            }
+          );
+
+        addMessage(
+          `${data.sender}: ${data.text}`,
+          data.sender === nickname
+            ? 'sent'
+            : 'received',
+          messageTime
+        );
+
+      });
+
+    }
+
+  );
+
+};
+window.saveRoomMessage = async function (
+  roomId,
+  text,
+  sender
+) {
+  await setDoc(
+
+  doc(db, "rooms", roomId),
+
+  {
+    lastMessage: text,
+    lastTime: Date.now()
+  },
+
+  { merge: true }
+
+);
+
+  await addDoc(
+
+    collection(db, "rooms", roomId, "messages"),
+
+    {
+      text,
+      sender,
+      time: Date.now()
+    }
+
+  );
+
+};
+window.closeSuccessModal = function () {
+
+  document.getElementById('success-modal').style.display =
+  'none';
+
+};
+</script>
+<div id="success-modal" class="success-modal">
+
+  <div class="success-box">
+
+    <div class="check-icon">✔</div>
+
+    <h1>로그인 성공!</h1>
+
+    <p id="success-text"></p>
+
+    <button onclick="closeSuccessModal()">
+      OK
+    </button>
+
+  </div>
+
+</div>
+</body>
+</html>
