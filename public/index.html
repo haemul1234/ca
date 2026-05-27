@@ -372,7 +372,7 @@ let nickname = localStorage.getItem('nickname') || '';
 
 
 // ── 닉네임 설정 ──────────────────────────────
-function setNickname() {
+window.setNickname = function() {
 
   const input = document.getElementById('nickname');
 
@@ -397,7 +397,7 @@ function setNickname() {
 }
 
 // ── 메시지 전송 ──────────────────────────────
-function sendMessage() {
+window.sendMessage = function() {
 
   const input = document.getElementById('input');
 
@@ -442,7 +442,7 @@ document.getElementById('input').addEventListener('keydown', (e) => {
 });
 
 // ── 메시지 출력 ──────────────────────────────
-function addMessage(text, type, time) {
+window.addMessage = function(text, type, time) {
 
   const messages = document.getElementById('messages');
 
@@ -462,14 +462,14 @@ function addMessage(text, type, time) {
 }
 
 // ── 상태 변경 ────────────────────────────────
-function setStatus(msg) {
+window.setStatus = function(msg) {
 
   document.getElementById('status').textContent = msg;
 
 }
 
 // ── 입력창 활성화 ────────────────────────────
-function setInputEnabled(enabled) {
+window.setInputEnabled = function(enabled) {
 
   document.getElementById('input').disabled = !enabled;
 
