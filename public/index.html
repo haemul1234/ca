@@ -161,11 +161,11 @@
       const result = await signInWithPopup(auth, provider);
 
       const user = result.user;
-      document.getElementById('success-modal').style.display =
-      'flex';
+      //document.getElementById('success-modal').style.display =
+      //'flex';
 
-      document.getElementById('success-text').textContent =
-      `${user.displayName}님 로그인되었습니다.`;
+      //document.getElementById('success-text').textContent =
+      //`${user.displayName}님 로그인되었습니다.`;
       
       await setDoc(doc(db, "users", user.uid), {
       
@@ -503,7 +503,6 @@ socket.on('message', (data) => {
   </div>
 
 </div>
-  <script src="/socket.io/socket.io.js"></script>
-  <script type="module" src="client.js"></script>
+
 </body>
 </html>
