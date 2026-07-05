@@ -434,6 +434,25 @@ window.login = async function () {
 
         div.onclick = () => {
 
+          onSnapshot(
+          doc(db,"users",data.uid),
+          (snapshot)=>{
+
+          const userData=snapshot.data();
+
+          document.getElementById("target-name").textContent=
+          userData.nickname || userData.name;
+
+          document.getElementById("target-status").textContent=
+          userData.online
+          ?"🟢 온라인"
+          :"⚪ 오프라인";
+
+          document.getElementById("target-photo").src=
+          userData.photo;
+
+          });
+
           const roomId =
             [user.uid, data.uid]
             .sort()
