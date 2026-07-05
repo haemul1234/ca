@@ -60,7 +60,7 @@
     <div id="profile" class="profile"></div>
     <button
       id="logout-btn"
-      onclick="auth.signOut()">
+      onclick="logout()">
       로그아웃
     </button>
     <!-- 닉네임 -->
@@ -409,6 +409,11 @@ window.logout = async function () {
   try {
 
     await signOut(auth);
+
+    localStorage.removeItem("currentRoom");
+
+    document.getElementById("messages").innerHTML = "";
+    document.getElementById("user-list").innerHTML = "";
 
   } catch (error) {
 
