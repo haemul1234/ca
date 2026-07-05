@@ -476,7 +476,7 @@ window.loadMessages = function (roomId) {
 
         addMessage(
           `${data.sender}: ${data.text}`,
-          data.sender === auth.currentUser.uid
+          data.uid === auth.currentUser.uid
             ? 'sent'
             : 'received',
           new Date(data.time)
@@ -549,33 +549,9 @@ window.sendMessage = async function () {
     text,
     nickname
   );
-
-  socket.emit('message', {
-
-    room: roomId,
-    text,
-    nickname
-
-  });
-
   input.value = '';
 
 };
-
-/* 메시지 받기 */
-socket.on('message', (data) => {
-
-  addMessage(
-
-    `${data.nickname}: ${data.text}`,
-
-    'received',
-
-    new Date().toLocaleTimeString('ko-KR')
-
-  );
-
-});
 
 /* 메시지 출력 */
 window.addMessage = function (
