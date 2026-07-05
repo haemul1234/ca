@@ -385,7 +385,7 @@ window.loadMessages = function (roomId) {
 
         addMessage(
           `${data.sender}: ${data.text}`,
-          data.sender === nickname
+          data.sender === auth.currentUser.uid
             ? 'sent'
             : 'received',
           new Date(data.time)
@@ -432,6 +432,7 @@ async function saveRoomMessage(
     {
       text,
       sender,
+      uid: auth.currentUser.uid,
       time: Date.now()
     }
 
