@@ -132,7 +132,8 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
-  onAuthStateChanged
+  onAuthStateChanged,
+  signOut
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -269,6 +270,15 @@ onAuthStateChanged(auth, (user) => {
 
     });
 
+  } 
+  else {
+
+    document.getElementById("login-screen").style.display = "flex";
+    document.getElementById("app").style.display = "none";
+
+    document.getElementById("messages").innerHTML = "";
+    document.getElementById("user-list").innerHTML = "";
+
   }
 
 });
@@ -388,6 +398,15 @@ window.login = async function () {
     console.error(error);
 
   }
+
+};
+
+/* 로그아웃 */
+window.logout = async function () {
+
+  if (!confirm("로그아웃하시겠습니까?")) return;
+
+  await signOut(auth);
 
 };
 
