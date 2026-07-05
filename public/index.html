@@ -211,6 +211,59 @@ onAuthStateChanged(auth, (user) => {
         'flex';
 
     }
+    onSnapshot(collection(db, "users"), (snapshot) => {
+
+      const userList = document.getElementById("user-list");
+
+      userList.innerHTML = "";
+
+      snapshot.forEach((docItem) => {
+
+        const data = docItem.data();
+
+        if (data.uid === user.uid) return;
+
+        const div = document.createElement("div");
+
+        div.className = "user-item";
+
+        div.innerHTML = `
+          <img src="${data.photo}" class="user-photo">
+
+          <div class="user-info">
+
+            <div class="user-name">
+              ${data.nickname || data.name}
+            </div>
+
+            <div class="last-message">
+              채팅 시작하기
+            </div>
+
+          </div>
+        `;
+
+        div.onclick = () => {
+
+          const roomId =
+            [user.uid, data.uid]
+            .sort()
+            .join("_");
+
+          localStorage.setItem(
+            "currentRoom",
+            roomId
+          );
+
+          loadMessages(roomId);
+
+        };
+
+        userList.appendChild(div);
+
+      });
+
+    });
 
   }
 
