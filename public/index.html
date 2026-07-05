@@ -303,11 +303,11 @@ onAuthStateChanged(auth, (user) => {
             document.getElementById("target-name").textContent =
                 data.nickname || data.name;
 
-            const status =
-              document.getElementById("target-status");
+          const status =
+            document.getElementById("target-status");
 
-              status.textContent =
-              data.online ? "🟢 온라인" : "⚪ 오프라인";
+            status.textContent =
+            data.online ? "🟢 온라인" : "⚪ 오프라인";
 
             document.getElementById("my-photo").src =
                 user.photoURL;
@@ -482,7 +482,8 @@ window.logout = async function () {
     document.getElementById("messages").innerHTML = "";
     document.getElementById("user-list").innerHTML = "";
 
-  } catch (error) {
+  }
+  catch (error) {
 
     console.error(error);
 
@@ -675,6 +676,7 @@ window.addEventListener("beforeunload", async () => {
       }
 
   });
+
 </script>
 
 </body>
