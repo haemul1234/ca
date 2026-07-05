@@ -52,6 +52,26 @@
 
     </div>
 
+    <div class="chat-user-bar">
+
+    <div class="chat-user" id="target-user">
+
+      <img id="target-photo">
+
+      <div id="target-name"></div>
+
+    </div>
+
+    <div class="chat-user" id="my-user">
+
+      <div id="my-name"></div>
+
+      <img id="my-photo">
+
+    </div>
+
+    </div>
+
     <!-- 프로필 -->
     <div id="profile" class="profile"></div>
     <button
@@ -250,6 +270,18 @@ onAuthStateChanged(auth, (user) => {
             [user.uid, data.uid]
             .sort()
             .join("_");
+
+            document.getElementById("target-photo").src =
+                data.photo;
+
+            document.getElementById("target-name").textContent =
+                data.nickname || data.name;
+
+            document.getElementById("my-photo").src =
+                user.photoURL;
+
+            document.getElementById("my-name").textContent =
+                nickname;
 
           localStorage.setItem(
             "currentRoom",
